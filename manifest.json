@@ -1,0 +1,18 @@
+{
+  "name": "GitHub Repo Hopping",
+  "description" : "To use, type gh plus a repo or org into the url bar.",
+  "version": "1.2",
+  "applications": {
+    "gecko": {
+      "strict_min_version": "52.0a1"
+    }
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "omnibox": { "keyword" : "gh" },
+  "manifest_version": 2,
+  "permissions": [
+    "https://github.com/"
+  ]
+}
