@@ -2,36 +2,31 @@ const BASE_URL = "https://github.com";
 
 // Provide help text to the user.
 browser.omnibox.setDefaultSuggestion({
-  description: `Jump directly to GitHub Repo
-    (e.g. "resque/resque" | "rails/rails")`
-});
-
-// Update the suggestions whenever the input is changed.
-browser.omnibox.onInputChanged.addListener((text, addSuggestions) => {
-  // let headers = new Headers({"Accept": "application/json"});
-  let init = {method: 'HEAD'};
-  let url = buildSearchURL(text);
-  let request = new Request(url, init);
-
-  fetch(request)
-    .then(createSuggestionsFromResponse)
-    .then(addSuggestions);
+  description: `Jump directly to a GitHub Repo (e.g. "gh resque/resque" | "rails/rails")`
 });
 
 // Open the page based on how the user clicks on a suggestion.
 browser.omnibox.onInputEntered.addListener((text, disposition) => {
-  console.log(text);
   let url = ""
   let parts = text.split(' ');
   let repo = parts[0];
   if (!text.startsWith(BASE_URL)) {
-    // Update the url if the user clicks on the default suggestion.
-    url = `${BASE_URL}/${text}`;
+    url = `${BASE_URL}/${repo}`;
   }
 
-  // Hop to the file finder page instead of the index page.
-  if (parts[1] == "t") {
-    url = `${url}/find/master`
+  //Hop to things within repo, e.g. file finder, pulls, issues, or path.
+  if (parts.length > 1) {
+    if (parts[1] == "t") {
+      url = `${url}/find/master`
+    } else if (parts[1][0] == "i" && parts[1][0].length == 1) {
+      url = `${url}/${formatPullOrIssueSearch(parts, "issues", "is:issue")}`
+    } else if (parts[1][0] == "p" && parts[1][0].length == 1) {
+      url = `${url}/${formatPullOrIssueSearch(parts, "pulls", "is:pr")}`
+    } else {
+      let pathPart = "";
+      if (parts[1][0] == "/") { pathPart = parts[1] } else { pathPart = `/${parts[1]}` }
+      url = `${url}/tree/master${pathPart}`
+    }
   }
 
   switch (disposition) {
@@ -47,29 +42,16 @@ browser.omnibox.onInputEntered.addListener((text, disposition) => {
   }
 });
 
-function buildSearchURL(text) {
-  let parts = text.split(' ');
+function formatPullOrIssueSearch(parts, type, defaultq) {
+  if (parts[2] === undefined) {
+    return type;
+  }
 
-  return `${BASE_URL}/${parts[0]}`;
-}
+  let string = parts.slice(2, parts.length + 1).join(" ");
+  if (string.includes("is:open") === false && string.includes("is:closed") === false ) {
+    string = `${string} is:open`
+  }
 
-function createSuggestionsFromResponse(response) {
-  return new Promise(resolve => {
-    let suggestions = [];
-    let suggestionsOnEmptyResults = [{
-      content: response.url,
-      description: "That URL doesn't exist."
-    }];
-    console.log(response);
-    if (!response.ok) {
-      return resolve(suggestionsOnEmptyResults);
-    }
-    return resolve([
-      {
-        content: response.url,
-        description: `Go to ${response.url}`
-      }
-    ]);
-  });
-}
+  return `${type}?q=${encodeURIComponent(`${defaultq} ${string}`)}`;
+};
 
