@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# check if web-ext is installed, if not, install it
+if ! command -v web-ext &> /dev/null; then
+		echo "web-ext could not be found, installing..."
+		brew install web-ext
+fi
+
+vault_id=$(op vault list --format=json | jq -r '.[] | select(.name=="Private") | .id')
+jwt_iss=$(op read "op://$vault_id/Firefox Addons/JWT/iss")
+jwt_secret=$(op read "op://$vault_id/Firefox Addons/JWT/secret")
+
+web-ext build
+web-ext sign --channel=unlisted \
+	--api-key=$jwt_iss \
+	--api-secret=$jwt_secret

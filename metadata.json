@@ -1,0 +1,12 @@
+{
+  "version": { "license": "MPL-2.0" },
+  "categories": { "firefox": [ "bookmarks"] },
+  "contributions_url": "https://donate.mozilla.org",
+  "requires_payment": false,
+  "homepage": {
+    "en-US": "https://github.com/jakewilkins/automatic-parakeet"
+  },
+  "support_email": {
+    "en-US": "support@jake.money"
+  }
+}
